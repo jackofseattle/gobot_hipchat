@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+// Listener is an interface for all of our message listeners.
 type Listener interface {
 	// A test to see if the handler for this instance should be called.
 	Test(string) (bool, map[string]string)
@@ -15,6 +16,7 @@ type Listener interface {
 	Handler(string, *hipchat.User, string, map[string]string)
 }
 
+// Robot is the core of the application, it provides manages the user list and incoming messages.
 type Robot struct {
 	listeners []Listener
 
@@ -27,8 +29,11 @@ type Robot struct {
 	initialLoaded bool
 }
 
-func (robot *Robot) Connect(jabberId string, password string) error {
-	client, err := hipchat.NewClient(jabberId, password, "gobot")
+// Connect is the entry point for the robot. This will dial in the hipchat client with the provided credentials and
+// start a keepAlive loop to prevent logouts.
+// Upon connecting the bot will join all available rooms and gather all the user info from the server.
+func (robot *Robot) Connect(jabberID string, password string) error {
+	client, err := hipchat.NewClient(jabberID, password, "gobot")
 	robot.client = client
 
 	client.Status("chat")
@@ -43,7 +48,7 @@ func (robot *Robot) Connect(jabberId string, password string) error {
 	return err
 }
 
-// Joins all discoverable rooms on the connected server.
+// JoinAllAvailableRooms - it in the name.
 // NOTE: for testing this only joins a single room.
 func (robot *Robot) JoinAllAvailableRooms() {
 	for _, room := range robot.client.Rooms() {
@@ -54,17 +59,18 @@ func (robot *Robot) JoinAllAvailableRooms() {
 	}
 }
 
-// Adds a new listener to the robot.
+// Listen will register a Listener with the bot.
 func (robot *Robot) Listen(l Listener) {
 	robot.listeners = append(robot.listeners, l)
 }
 
-func (robot *Robot) Say(roomId string, message string) {
-	robot.client.Say(roomId, robot.Name, message)
+// Say will send a message to the specified room as the bot's alias.
+func (robot *Robot) Say(roomID string, message string) {
+	robot.client.Say(roomID, robot.Name, message)
 }
 
-// The standard listening loop. Gathers messages and meta data as they are received and calls all interested listeners.
-// This is a blocking loop.
+// StartListening begins the message listening loop. Gathers messages and meta data as they are received and calls
+// all interested listeners. This is a blocking loop.
 //
 // The loop is skipped for the first 3 seconds after calling. This allows for all of the history items to be cleared
 // before we start handling messages. Further, the loop is skipped if the user list hasn't been loaded yet.
@@ -108,16 +114,16 @@ func (robot *Robot) StartListening() {
 	}
 }
 
-// Collectes all the users on the server for later lookup.
-// We do this here because fetching the users can be a timeconsuming process.
+// CollectUserObjects collects all the users on the server for later lookup.
+// We do this here because fetching the users can be a time consuming process.
 func (robot *Robot) CollectUserObjects() {
 	for _, user := range robot.client.Users() {
 		robot.UserList[user.Name] = user
 	}
 }
 
-func (robot *Robot) getUserName(messageUrl string) string {
-	split := strings.Split(messageUrl, "/")
+func (robot *Robot) getUserName(messageURL string) string {
+	split := strings.Split(messageURL, "/")
 
 	if len(split) != 2 {
 		return ""

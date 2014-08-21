@@ -26,17 +26,21 @@ type gAjaxReply struct {
 	Data gResponseData `json:"responseData"`
 }
 
+// AnimateResponder - A responder to handle requests for 'animate' and 'image'. Fetches a random result from the google images
+// api and returns the url to the browser.
 type AnimateResponder struct {
 	Robot *lib.Robot
 }
 
+// Test checks to see that the incoming requests matches the animate/image (me) <query> pattern
 func (r AnimateResponder) Test(input string) (bool, map[string]string) {
 	cmp := lib.NamedRegexp{regexp.MustCompile(`^(?P<type>animate|image)\s(me\s)?(?P<query>.+)`)}
 	res := cmp.FindStringSubmatchMap(input)
 	return len(res) > 0, res
 }
 
-func (r AnimateResponder) Handler(body string, user *hipchat.User, roomId string, params map[string]string) {
+// Handler fetches an image from the google images api. With an additional query parameter for animated requests.
+func (r AnimateResponder) Handler(body string, user *hipchat.User, roomID string, params map[string]string) {
 	query := make(url.Values)
 	query.Set("v", "1.0")
 	query.Set("rsz", "8")
@@ -49,7 +53,7 @@ func (r AnimateResponder) Handler(body string, user *hipchat.User, roomId string
 		query.Set("imgtype", "animated")
 	}
 
-	r.Robot.Say(roomId, r.getImage(query))
+	r.Robot.Say(roomID, r.getImage(query))
 }
 
 func (r AnimateResponder) getImage(query url.Values) string {
@@ -83,5 +87,4 @@ func (r AnimateResponder) getImage(query url.Values) string {
 
 	item := dat.Data.Results[rand.Intn(len(dat.Data.Results)-1)]
 	return item.Result
-
 }

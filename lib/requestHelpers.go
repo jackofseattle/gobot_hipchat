@@ -2,10 +2,12 @@ package lib
 
 import "regexp"
 
+// NamedRegexp extends a Regexp object to add a method for returning named capture groups.
 type NamedRegexp struct {
 	*regexp.Regexp
 }
 
+// FindStringSubmatchMap returns a map of named capture groups in a regular expression.
 func (r *NamedRegexp) FindStringSubmatchMap(s string) map[string]string {
 	captures := make(map[string]string)
 
