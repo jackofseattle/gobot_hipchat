@@ -1,29 +1,34 @@
 package main
 
 import (
-	"fmt"
 	"github.com/jackofseattle/gobot_hipchat/lib"
+	"github.com/jackofseattle/gobot_hipchat/listeners"
+	"log"
 	"os"
 )
 
 func main() {
+
 	user := os.Getenv("GOBOT_JABBER_USER_ID")
 	password := os.Getenv("GOBOT_JABBER_PASSWORD")
 
-	robot := new(lib.Robot)
-
-	robot.Name = "Go Bot"
-	robot.Alias = "GoBot"
+	robot := lib.Robot{Name: "Go Bot", Alias: "GoBot"}
 
 	err := robot.Connect(user, password)
 
 	if err != nil {
-		fmt.Printf("Error connecting: %s", err)
+		log.Fatalf("Error connecting: %s", err)
 		return
 	}
 
-	robot.JoinAllAvailableRooms()
+	registerListeners(&robot)
 
-	fmt.Println("Beginning Listen Loop")
+	log.Println("Beginning Listen Loop")
+
 	robot.StartListening()
+}
+
+func registerListeners(robot *lib.Robot) {
+	robot.Listen(listeners.PingResponder{robot})
+	robot.Listen(listeners.AnimateResponder{robot})
 }

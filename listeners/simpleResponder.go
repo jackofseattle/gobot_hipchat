@@ -6,13 +6,13 @@ import (
 )
 
 type SimpleResponder struct {
-	robot *lib.Robot
+	Robot *lib.Robot
 }
 
-func (r *SimpleResponder) Test(input string) bool {
-	return true
+func (r SimpleResponder) Test(input string) (bool, map[string]string) {
+	return false, make(map[string]string)
 }
 
-func (r *SimpleResponder) Handler(body string, user *hipchat.User, roomId string) {
-	r.robot.Say(roomId, "I got your message")
+func (r SimpleResponder) Handler(body string, user *hipchat.User, roomId string, params map[string]string) {
+	r.Robot.Say(roomId, "I got your message")
 }
