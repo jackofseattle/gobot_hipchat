@@ -15,32 +15,15 @@ import (
 const googleImagesEndpoint = "http://ajax.googleapis.com/ajax/services/search/images"
 
 type gImageResult struct {
-	GsearchResultClass  string
-	width               string
-	height              string
-	imageId             string
-	tbWidth             string
-	tbHeight            string
-	Result              string `json:"unescapedUrl"`
-	url                 string
-	visibleUrl          string
-	title               string
-	titleNoFormatting   string
-	originalContextUrl  string
-	content             string
-	contentNoFormatting string
-	tbUrl               string
+	Result string `json:"unescapedUrl"`
 }
 
 type gResponseData struct {
 	Results []gImageResult `json:"results"`
-	cursor  interface{}
 }
 
 type gAjaxReply struct {
-	Data            interface{} `json:"responseData"`
-	responseDetails interface{}
-	responseStatus  interface{}
+	Data gResponseData `json:"responseData"`
 }
 
 type AnimateResponder struct {
@@ -48,7 +31,6 @@ type AnimateResponder struct {
 }
 
 func (r AnimateResponder) Test(input string) (bool, map[string]string) {
-
 	cmp := lib.NamedRegexp{regexp.MustCompile(`^(?P<type>animate|image)\s(me\s)?(?P<query>.+)`)}
 	res := cmp.FindStringSubmatchMap(input)
 	return len(res) > 0, res
@@ -81,35 +63,25 @@ func (r AnimateResponder) getImage(query url.Values) string {
 	if err != nil {
 		log.Fatal(err)
 		return ""
-	} else {
-		defer response.Body.Close()
-		contents, err := ioutil.ReadAll(response.Body)
-		if err != nil {
-			log.Fatal(err)
-			return ""
-		}
-
-		var dat gAjaxReply
-
-		json.Unmarshal(contents, &dat)
-
-		if dat.Data == nil {
-			log.Printf("Failed on data, %+v - %+v \n %+v", dat.Data, &dat.Data, dat)
-			return ""
-		}
-
-		k := dat.Data.(map[string]interface{})
-
-		res, _ := k["results"]
-
-		n := rand.Intn(len(res.([]interface{})) - 1)
-
-		item := res.([]interface{})[n].(map[string]interface{})
-		imageUrl := item["unescapedUrl"]
-
-		log.Printf("contents: %+v", imageUrl)
-
-		return imageUrl.(string)
 	}
+
+	defer response.Body.Close()
+	contents, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		log.Fatal(err)
+		return ""
+	}
+
+	var dat gAjaxReply
+
+	json.Unmarshal(contents, &dat)
+
+	if &dat.Data == nil {
+		log.Printf("Failed on data, %+v - %+v \n %+v", dat.Data, &dat.Data, dat)
+		return ""
+	}
+
+	item := dat.Data.Results[rand.Intn(len(dat.Data.Results)-1)]
+	return item.Result
 
 }

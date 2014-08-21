@@ -47,7 +47,7 @@ func (robot *Robot) Connect(jabberId string, password string) error {
 // NOTE: for testing this only joins a single room.
 func (robot *Robot) JoinAllAvailableRooms() {
 	for _, room := range robot.client.Rooms() {
-		if room.Name == "BotTesting" || room.Name == "Johnny Hates Freedom" {
+		if room.Name == "BotTesting" {
 			robot.client.Join(room.Id, "Go Bot")
 			log.Println("Joined Room")
 		}
